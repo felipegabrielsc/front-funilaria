@@ -1,98 +1,123 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import axios from 'axios';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const [produto, setProduto] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [valor, setValor] = useState('');
+  const [formaPagamento, setFormaPagamento] = useState('');
+  const [observacao, setObservacao] = useState('');
+  const [loading, setLoading] = useState(false);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  // ⚠️ SEU IP AQUI
+  const API_URL = 'https://backend-oficina-api.onrender.com/compras';
+
+  const salvar = async () => {
+    if (!produto || !valor) {
+      Alert.alert("Atenção", "Produto e Valor são obrigatórios!");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post(API_URL, {
+        produto,
+        descricao,
+        valor: parseFloat(valor.replace(',', '.')),
+        formaPagamento,
+        observacao
+      });
+
+      Alert.alert("Sucesso", "Compra salva! Vá na aba Histórico para ver.");
+
+      // Limpa os campos para a próxima
+      setProduto('');
+      setDescricao('');
+      setValor('');
+      setFormaPagamento('');
+      setObservacao('');
+    } catch (error) {
+      Alert.alert("Erro", "Falha ao conectar no servidor.");
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scroll}>
+          <Text style={styles.titulo}>Nova Compra ➕</Text>
+          <Text style={styles.subtitulo}>Preencha os dados da nota/cupom</Text>
+
+          <View style={styles.form}>
+            <Text style={styles.label}>Produto *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ex: Tinta Automotiva"
+              value={produto}
+              onChangeText={setProduto}
+            />
+
+            <Text style={styles.label}>Valor (R$) *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ex: 150.00"
+              keyboardType="numeric"
+              value={valor}
+              onChangeText={setValor}
+            />
+
+            <Text style={styles.label}>Descrição</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ex: Para o Fusca Azul"
+              value={descricao}
+              onChangeText={setDescricao}
+            />
+
+            <Text style={styles.label}>Pagamento</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ex: Pix, Cartão da Empresa"
+              value={formaPagamento}
+              onChangeText={setFormaPagamento}
+            />
+
+            <Text style={styles.label}>Observação</Text>
+            <TextInput
+              style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
+              placeholder="Detalhes extras..."
+              multiline={true}
+              numberOfLines={3}
+              value={observacao}
+              onChangeText={setObservacao}
+            />
+
+            <TouchableOpacity
+              style={[styles.botao, loading && { opacity: 0.7 }]}
+              onPress={salvar}
+              disabled={loading}
+            >
+              <Text style={styles.textoBotao}>{loading ? "Salvando..." : "CADASTRAR COMPRA"}</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  container: { flex: 1, backgroundColor: '#F2F2F2' },
+  scroll: { padding: 20, paddingBottom: 100 },
+  titulo: { fontSize: 28, fontWeight: 'bold', color: '#333', marginTop: 20 },
+  subtitulo: { fontSize: 16, color: '#666', marginBottom: 20 },
+  form: { backgroundColor: '#FFF', padding: 20, borderRadius: 12, elevation: 3 },
+  label: { fontWeight: 'bold', color: '#444', marginBottom: 5, marginTop: 10 },
+  input: { backgroundColor: '#F9F9F9', borderWidth: 1, borderColor: '#DDD', padding: 12, borderRadius: 8, fontSize: 16 },
+  botao: { backgroundColor: '#007BFF', padding: 16, borderRadius: 8, alignItems: 'center', marginTop: 25 },
+  textoBotao: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
 });
