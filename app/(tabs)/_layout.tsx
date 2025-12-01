@@ -1,36 +1,54 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { Platform } from 'react-native'; // <--- Importante para detectar se é Android
 import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false, // Remove o cabeçalho padrão
-        tabBarActiveTintColor: '#007BFF', // Cor padrão quando selecionado (Azul)
-        tabBarInactiveTintColor: '#888',  // Cor quando não selecionado (Cinza)
+        headerShown: false, // Remove o cabeçalho padrão do topo
+        tabBarActiveTintColor: '#007BFF', // Azul quando selecionado
+        tabBarInactiveTintColor: '#999',  // Cinza quando inativo
+
+        // --- AQUI ESTÁ A CORREÇÃO DO BUG ---
         tabBarStyle: {
-          paddingBottom: 5,
-          height: 60,
+          // Se for Android, a barra terá 80 de altura. Se for iOS, 60.
+          height: Platform.OS === 'android' ? 80 : 60,
+
+          // Esse padding empurra os ícones pra cima, fugindo dos botões do Samsung
+          paddingBottom: Platform.OS === 'android' ? 20 : 5,
+
+          paddingTop: 8,
+          backgroundColor: '#FFF',
+          borderTopWidth: 1,
+          borderTopColor: '#EEE',
+          elevation: 8, // Sombra para destacar a barra
+        },
+        // Ajuste para o texto não ficar colado na borda
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: 'bold',
+          marginBottom: Platform.OS === 'android' ? 10 : 0,
         }
       }}>
 
-      {/* 1. ABA GASTAR (Ícone Vermelho) */}
+      {/* 1. ABA GASTAR (Ícone Vermelho ao selecionar) */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Nova compra',
+          title: 'Gastar',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'remove-circle' : 'remove-circle-outline'}
               size={26}
-              color={focused ? '#d32f2f' : '#888'} // Fica vermelho quando ativo
+              color={focused ? '#d32f2f' : '#999'}
             />
           ),
         }}
       />
 
-      {/* 2. ABA HISTÓRICO GASTOS */}
+      {/* 2. ABA HISTÓRICO */}
       <Tabs.Screen
         name="explore"
         options={{
@@ -45,7 +63,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 3. ABA NOVO SERVIÇO (Ferramenta) */}
+      {/* 3. ABA NOVO SERVIÇO */}
       <Tabs.Screen
         name="servicos"
         options={{
@@ -60,16 +78,16 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 4. ABA FINANCEIRO (Ícone Verde de Dinheiro) */}
+      {/* 4. ABA CAIXA (Ícone Verde ao selecionar) */}
       <Tabs.Screen
         name="financeiro"
         options={{
-          title: 'Serviços',
+          title: 'Caixa',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'cash' : 'cash-outline'}
               size={26}
-              color={focused ? '#2E7D32' : '#888'} // Fica verde quando ativo
+              color={focused ? '#2E7D32' : '#999'}
             />
           ),
         }}
